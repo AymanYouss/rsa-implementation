@@ -2,6 +2,8 @@ import math
 import time
 import random
 from typing import Tuple
+from datetime import datetime
+from rsa import RSA  # Import your RSA class from the provided code
 
 class RSASecurityAnalysis:
     """
@@ -29,6 +31,7 @@ class RSASecurityAnalysis:
         # Very naive approach: try dividing n by every odd number
         # from 3 up to sqrt(n). This is extremely slow for large n.
         limit = int(math.isqrt(n)) + 1
+        print(limit)
         for i in range(3, limit, 2):
             if n % i == 0:
                 return i, n // i
@@ -73,13 +76,11 @@ class RSASecurityAnalysis:
         for i, duration in enumerate(times):
             print(f"Ciphertext {i}: {duration:.6f}s")
 
-def demo_security_analysis():
-    from datetime import datetime
-    from rsa import RSA  # Import your RSA class from the provided code
+def demo_security_analysis_factorization():
 
     # Create an RSA instance with a smaller key_size for demonstration only
     # NOTE: Using a smaller key size to make naive factoring feasible in a demo
-    rsa_small = RSA(key_size=32)  # 32 bits is extremely insecure, but let's do it for demonstration
+    rsa_small = RSA(key_size=48)  # 32 bits is extremely insecure, but let's do it for demonstration
     rsa_small.generate_keypair()
 
     analyzer_small = RSASecurityAnalysis(rsa_small)
@@ -87,15 +88,65 @@ def demo_security_analysis():
     # Show naive factoring success for a small modulus
     analyzer_small.test_naive_factoring()
 
-    # Show timing attack simulation
-    # Let's encrypt some small messages as ciphertext
-    messages = [b"A", b"B", b"C", b"D", b"E"]
-    ciphertexts = []
-    for m in messages:
-        cipher = rsa_small.encrypt(m)
-        ciphertexts.append(cipher)
+    
 
-    analyzer_small.timing_attack_simulation(ciphertexts)
+
+import time
+import statistics
+
+def timing_attack_demo(rsa, ciphertexts, repetitions=1000):
+    """
+    Perform multiple timing measurements on each ciphertext
+    to demonstrate that timing could leak secrets if not 
+    mitigated properly.
+    """
+    results = []
+    for i, c in enumerate(ciphertexts):
+        times = []
+        for _ in range(repetitions):
+            start = time.perf_counter_ns()
+            _ = rsa.decrypt(c)
+            end = time.perf_counter_ns()
+            times.append(end - start)
+        
+        avg_time = statistics.mean(times)
+        stdev_time = statistics.pstdev(times)
+        results.append((c, avg_time, stdev_time))
+    
+    # Print summary
+    for i, (c, avg, stdev) in enumerate(results):
+        print(f"Ciphertext {i}: avg = {avg/1e6:.6f} ms, std dev = {stdev/1e6:.6f} ms")
+def generate_ciphertexts(rsa: RSA):
+    """
+    Generate a list of ciphertexts from different plaintext messages
+    to analyze potential timing differences.
+    """
+    plaintexts = [
+        b"A",
+        b"Hello",
+        b"SecretMsg",
+        b"12345678",
+        b"abcdefg",
+    ]
+    
+    ciphertexts = []
+    for msg in plaintexts:
+        c = rsa.encrypt(msg)
+        ciphertexts.append(c)
+    return ciphertexts
+
+def main():
+    # 1. Create RSA instance & generate keys
+    rsa_instance = RSA(key_size=512)  # 512-bit for faster demo (still not secure in real world)
+    rsa_instance.generate_keypair()
+
+    # 2. Generate a list of ciphertexts
+    ciphers = generate_ciphertexts(rsa_instance)
+    print("Generated ciphertexts:\n", [hex(c) for c in ciphers])
+
+    # 3. Perform timing attack demo
+    timing_attack_demo(rsa_instance, ciphers, repetitions=50)
 
 if __name__ == "__main__":
-    demo_security_analysis()
+    main()
+    demo_security_analysis_factorization()

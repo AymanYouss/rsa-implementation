@@ -112,21 +112,38 @@ class RSA:
         
         return padded_bytes[separator_index + 1:]
     
+    # def encrypt(self, message: Union[str, bytes]) -> int:
+    #     """
+    #     Encrypt a message using public key
+    #     """
+    #     if not self.public_key:
+    #         raise ValueError("No public key available")
+            
+    #     n, e = self.public_key
+    #     padded = self.pad_message(message)
+        
+    #     # Add timing variation protection
+    #     start_time = time.time()
+    #     cipher = pow(padded, e, n)
+    #     time.sleep(0.001 - ((time.time() - start_time) % 0.001))
+        
+    #     return cipher
+
     def encrypt(self, message: Union[str, bytes]) -> int:
-        """
-        Encrypt a message using public key
-        """
         if not self.public_key:
             raise ValueError("No public key available")
-            
+                
         n, e = self.public_key
-        padded = self.pad_message(message)
         
-        # Add timing variation protection
-        start_time = time.time()
-        cipher = pow(padded, e, n)
-        time.sleep(0.001 - ((time.time() - start_time) % 0.001))
+        # Direct conversion without padding (INSECURE)
+        if isinstance(message, str):
+            message = message.encode('utf-8')
+        message_int = int.from_bytes(message, 'big')
         
+        if message_int >= n:
+            raise ValueError("Message integer too large for this RSA modulus. Consider using bigger key size.")
+        
+        cipher = pow(message_int, e, n)
         return cipher
     
     def decrypt(self, cipher: int) -> bytes:
@@ -142,10 +159,13 @@ class RSA:
             
         # Add timing variation protection
         start_time = time.time()
-        padded = pow(cipher, d, n)
+        # padded
+        message_int = pow(cipher, d, n)
         time.sleep(0.001 - ((time.time() - start_time) % 0.001))
         
-        return self.unpad_message(padded)
+        # return self.unpad_message(padded)
+        msg_len = (message_int.bit_length() + 7) // 8
+        return message_int.to_bytes(msg_len, 'big')
 
 def save_key_to_file(key: Tuple[int, int], filename: str) -> None:
     """Save a key to a file"""
