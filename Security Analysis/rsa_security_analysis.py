@@ -4,6 +4,8 @@ import random
 from typing import Tuple
 from datetime import datetime
 from rsa import RSA  # Import your RSA class from the provided code
+import time
+import statistics
 
 class RSASecurityAnalysis:
     """
@@ -91,8 +93,7 @@ def demo_security_analysis_factorization():
     
 
 
-import time
-import statistics
+
 
 def timing_attack_demo(rsa, ciphertexts, repetitions=1000):
     """
