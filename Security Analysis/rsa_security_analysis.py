@@ -3,9 +3,9 @@ import time
 import random
 from typing import Tuple
 from datetime import datetime
-from rsa import RSA  # Import your RSA class from the provided code
 import time
 import statistics
+from rsa import RSA
 
 class RSASecurityAnalysis:
     """
