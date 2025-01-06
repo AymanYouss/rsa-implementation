@@ -138,7 +138,7 @@ def generate_ciphertexts(rsa: RSA):
 
 def main():
     # 1. Create RSA instance & generate keys
-    rsa_instance = RSA(key_size=512)  # 512-bit for faster demo (still not secure in real world)
+    rsa_instance = RSA(key_size=1024)  # 512-bit for faster demo (still not secure in real world)
     rsa_instance.generate_keypair()
 
     # 2. Generate a list of ciphertexts
