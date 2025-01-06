@@ -33,27 +33,7 @@
 
 % -------------------------------------------------------------------
 % 1. INTRODUCTION
-% -------------------------------------------------------------------
-\section{Introduction}
-This report documents a small project aimed at \textbf{managing RSA key pairs} and performing a \textbf{security analysis} through:
-\begin{itemize}
-    \item Automated key generation, storage, and rotation (key management).
-    \item Demonstration of potential vulnerabilities:
-    \begin{itemize}
-        \item \emph{Naive factoring} of small RSA moduli.
-        \item \emph{Timing attacks} on RSA decryption.
-    \end{itemize}
-\end{itemize}
-
-The core objectives include:
-\begin{enumerate}
-    \item Providing an illustrative class-based approach for \textbf{key management}, covering generation, expiration, and replacement of keys.
-    \item Showcasing how \textbf{small} RSA key sizes can be compromised easily through rudimentary methods.
-    \item Highlighting how \textbf{encryption timing} might be exploited to reveal secret parameters if precautions are not taken.
-\end{enumerate}
-
-\noindent
-All cryptographic operations rely on an \textit{RSA} class (not included verbatim here). The focus is on the \emph{methods} and \emph{conceptual correctness} rather than the low-level code details.
+% ----------------------------------------------------------------
 
 % -------------------------------------------------------------------
 % 2. KEY MANAGEMENT
@@ -295,57 +275,6 @@ A \emph{timing attack} attempts to deduce private information by measuring how l
     \item \textbf{Analyze differences:} By comparing the average and standard deviation of decryption times, one can see if certain ciphertexts yield longer or shorter durations, which might indicate how the algorithm branches internally.
 \end{itemize}
 
-\subsubsection{Correctness}
-Although \emph{timing attacks} rely on statistical patterns, the demonstration code repeatedly decrypts test ciphertexts to capture average and variance in runtime. Correctness is validated by:
-\begin{itemize}
-    \item Repeated measurements, reducing random noise.
-    \item Aggregating results across multiple ciphertexts to highlight potential differences.
-\end{itemize}
-In a real-world scenario, truly constant-time cryptographic implementations mitigate or eliminate these observable patterns.
-
-\subsection{Conceptual Diagram of Factoring and Timing Workflows}
-\begin{figure}[h!]
-\centering
-\resizebox{\textwidth}{!}{%
-\begin{tikzpicture}[
-    node distance=2cm,
-    box/.style={rectangle, draw, rounded corners, align=center, 
-                minimum width=2.4cm, minimum height=1.2cm},
-    arrow/.style={->, thick, shorten >=2pt, shorten <=2pt}
-]
-
-% Factoring part
-\node[box] (startF) {Start Factoring};
-\node[box, right=0.5 of startF] (candidate) {Pick Factor \\ Candidate $i$};
-\node[box, right=0.5 of candidate] (check) {Check $n \mod i = 0$?};
-\node[box, above=1.2 of check] (found) {Factors Found};
-\node[box, right=0.6 of check] (no) {Increment $i$};
-\node[box, right=0.6 of no] (stop) {Stop if $i > \sqrt{n}$};
-
-\draw[arrow] (startF) -- (candidate);
-\draw[arrow] (candidate) -- (check);
-\draw[arrow] (check) -- node[above]{Yes} (found);
-\draw[arrow] (check) -- node[above]{No} (no);
-\draw[arrow] (no) -- (stop);
-\draw[arrow] (stop) -- ++(0,-1) -| (candidate);
-
-% Timing attack part
-\node[box, below=3.2 of startF] (startT) {Start Timing};
-\node[box, right=1.2 of startT] (encrypt) {Generate \\ Ciphertexts};
-\node[box, right=1.2 of encrypt] (measure) {Measure \\ Decryption Time};
-\node[box, right=1.2 of measure] (analyze) {Analyze Patterns};
-\node[box, right=1.2 of analyze] (conclude) {Conclude \\ Potential Leak};
-
-\draw[arrow] (startT) -- (encrypt);
-\draw[arrow] (encrypt) -- (measure);
-\draw[arrow] (measure) -- (analyze);
-\draw[arrow] (analyze) -- (conclude);
-
-\end{tikzpicture}
-} % end of \resizebox
-\caption{High-level Workflows for Naive Factoring and Timing Analysis}
-\label{fig:factoring_timing_diagram}
-\end{figure}
 
 \section{ Application Overview}
 The RSA Encryption Application is a web-based tool designed to provide a secure and user-friendly platform for performing RSA-based cryptographic operations. It enables users to generate RSA key pairs, encrypt and decrypt messages or files, and manage cryptographic keys efficiently. The application is built using Flask, integrating both Python libraries and custom modules to handle cryptographic operations and file processing.
