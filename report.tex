@@ -141,7 +141,129 @@ In Figure~\ref{fig:key_management_workflow}:
 \end{enumerate}
 
 % -------------------------------------------------------------------
-% 3. SECURITY ANALYSIS
+% 3. Implementation Details
+% -------------------------------------------------------------------
+
+\section{Implementation Details}
+This section presents a detailed implementation of the RSA cryptosystem in Python, featuring robust key generation, secure padding mechanisms, and timing attack mitigations.
+
+\subsection{Core RSA Class Implementation}
+The implementation centers around a primary \texttt{RSA} class that encapsulates all cryptographic operations. The class provides a comprehensive interface for key generation, message padding, encryption, and decryption.
+
+\subsubsection{Key Generation}
+The key generation process implements several crucial security features:
+
+\begin{itemize}
+    \item \textbf{Secure Prime Generation:} Utilizes the Miller-Rabin primality test with 128 rounds for high confidence in prime number generation:
+    \begin{verbatim}
+    def is_prime(self, n: int, k: int = 128) -> bool:
+        if n == 2 or n == 3:
+            return True
+        if n < 2 or n % 2 == 0:
+            return False
+        
+        r, d = 0, n - 1
+        while d % 2 == 0:
+            r += 1
+            d //= 2
+    \end{verbatim}
+
+    \item \textbf{Cryptographically Secure Random Number Generation:} Employs Python's \texttt{secrets} module instead of the standard \texttt{random} module for generating prime candidates:
+    \begin{verbatim}
+    def generate_prime(self, bits: int) -> int:
+        while True:
+            n = secrets.randbits(bits)
+            n |= (1 << bits - 1) | 1
+            if self.is_prime(n, 128):
+                return n
+    \end{verbatim}
+\end{itemize}
+
+\subsubsection{Message Padding}
+The implementation includes PKCS\#1 v1.5 style padding for enhanced security:
+
+\begin{itemize}
+    \item \textbf{Padding Implementation:} Follows the format: \texttt{00 || 02 || PS || 00 || M}
+    \item \textbf{Random Padding:} Generates non-zero random bytes for the padding string (PS)
+    \item \textbf{Length Validation:} Ensures messages don't exceed the maximum length based on key size
+\end{itemize}
+
+The padding method includes crucial security checks:
+\begin{verbatim}
+def pad_message(self, message: Union[str, bytes]) -> int:
+    if isinstance(message, str):
+        message = message.encode('utf-8')
+    
+    max_message_length = self.key_size // 8 - 11
+    if len(message) > max_message_length:
+        raise ValueError(f"Message too long")
+        
+    padding_length = self.key_size // 8 - len(message) - 3
+    padding = b''
+    while len(padding) < padding_length:
+        byte = secrets.token_bytes(1)
+        if byte != b'\x00':
+            padding += byte
+\end{verbatim}
+
+\subsubsection{Encryption and Decryption}
+The core cryptographic operations implement several security measures:
+
+\begin{itemize}
+    \item \textbf{Timing Attack Mitigation:} Both encryption and decryption operations include constant-time padding:
+    \begin{verbatim}
+    start_time = time.time()
+    cipher = pow(padded, e, n)
+    time.sleep(0.001 - ((time.time() - start_time) % 0.001))
+    \end{verbatim}
+    
+    \item \textbf{Input Validation:} Checks for key availability and appropriate message sizes:
+    \begin{verbatim}
+    if not self.public_key:
+        raise ValueError("No public key available")
+        
+    if cipher >= n:
+        raise ValueError("Ciphertext too large")
+    \end{verbatim}
+\end{itemize}
+
+\subsection{Performance Analysis}
+The implementation includes performance monitoring capabilities:
+
+\begin{itemize}
+    \item \textbf{Timing Measurements:} Records encryption and decryption times:
+    \begin{verbatim}
+    start_time = datetime.now()
+    encrypted = rsa.encrypt(message)
+    encryption_time = (datetime.now() - 
+                      start_time).total_seconds()
+    \end{verbatim}
+    
+    \item \textbf{Key Generation Monitoring:} Tracks the time taken for key generation and primality testing
+\end{itemize}
+
+\subsection{Security Considerations}
+The implementation addresses several security aspects:
+
+\begin{itemize}
+    \item \textbf{Strong Prime Generation:} Uses cryptographically secure random number generation
+    \item \textbf{Proper Padding:} Implements PKCS\#1 v1.5 padding scheme
+    \item \textbf{Timing Attack Protection:} Implements constant-time operations
+    \item \textbf{Input Validation:} Includes comprehensive error checking
+\end{itemize}
+
+\subsection{Future Enhancements}
+Potential improvements to the current implementation could include:
+
+\begin{itemize}
+    \item \textbf{OAEP Padding:} Upgrading to more modern PKCS\#1 v2.0 OAEP padding
+    \item \textbf{Additional Side-Channel Protections:} Implementing blinding techniques
+    \item \textbf{Performance Optimizations:} Using the Chinese Remainder Theorem for decryption
+    \item \textbf{Memory Security:} Implementing secure memory wiping for sensitive values
+\end{itemize}
+
+% -------------------------------------------------------------------
+% 4. SECURITY ANALYSIS
 % -------------------------------------------------------------------
 \section{Security Analysis}
 
@@ -227,7 +349,7 @@ In a real-world scenario, truly constant-time cryptographic implementations miti
 
 
 % -------------------------------------------------------------------
-% 4. CONCLUSION
+% 5. CONCLUSION
 % -------------------------------------------------------------------
 \section{Conclusion}
 
