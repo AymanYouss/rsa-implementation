@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cryptography Page</title>
+    <style>
+        /* Styling for the page */
+        table {
+            width: 100%;
+            border: solid 1px;
+            border-collapse: collapse;
+            word-break: break-word;
+            text-align: center;
+            padding: 20px;
+        }
+
+        td,
+        th {
+            border: solid 1px;
+        }
+
+        .time {
+            width: 100%;
+            word-break: break-all;
+            font-weight: bold;
+        }
+
+        .time {
+            color: red;
+        }
+
+        .public {
+            background: #c5f3c5;
+        }
+
+        .private {
+            background: #fbebeb;
+        }
+
+        .history {
+            margin-top: 20px;
+            border: solid 1px #ccc;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+
+        .history h3 {
+            margin-bottom: 10px;
+        }
+
+        .history ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .history li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Cryptography Page</h2>
+
+    <!-- Form for encryption/decryption -->
+    <form action="{{ url_for('crypto_text_dec') }}" method="POST">
+        <label for="keytype">Choose key type:</label>
+        <select name="keytype" id="keytype">
+            <option value="public">Public Key</option>
+            <option value="private">Private Key</option>
+        </select>
+        <br>
+
+        <!-- Text input for encryption or decryption -->
+        <textarea name="input_text" placeholder="Enter text here" rows="5" style="width: 100%;"></textarea>
+        <br>
+        <input type="submit" value="Encrypt / Decrypt">
+    </form>
+
+    <br />
+
+    <!-- Display the encryption/decryption result -->
+    {% if text_output %}
+    <h3>Result:</h3>
+    <p>{{ text_output }}</p>
+    {% endif %}
+
+    {% if text_output_dec %}
+    <h3>Decrypted Result:</h3>
+    <p>{{ text_output_dec }}</p>
+    {% endif %}
+
+    <!-- Display the history of encrypted/decrypted messages -->
+    <div class="history">
+        <h3>History of Previous Results:</h3>
+        <ul>
+            {% for result in session.get('crypto_history', []) %}
+            <li>{{ result }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Time taken for encryption/decryption -->
+    <p>Time Taken: <span class="time">{{ time_needed }}</span></p>
+    <h3>Public Key:</h3>
+    <p>n: {{ n }}</p>
+    <p>e: {{ e }}</p>
+
+    {% if d %}
+    <h3>Private Key:</h3>
+    <p>d: {{ d }}</p>
+    {% endif %}
+    <!-- Button to go back -->
+    <div>
+        <a href="{{ url_for('index') }}">Back to Home Page</a>
+    </div>
+</body>
+
+</html>

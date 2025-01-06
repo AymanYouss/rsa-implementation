@@ -1,9 +1,10 @@
-import os
 import json
+import os
+import sys
 import time
 from datetime import datetime, timedelta
-import sys
-from rsa import RSA,save_key_to_file, load_key_from_file
+
+from RSA.rsa import RSA, load_key_from_file, save_key_to_file
 
 
 class RSAKeyManager:
@@ -14,27 +15,16 @@ class RSAKeyManager:
     def __init__(self, key_size=2048, expiration_days=365):
         self.key_size = key_size
         self.expiration_days = expiration_days
-        self.public_key_file = "public_key_mgmt.txt"
-        self.private_key_file = "private_key_mgmt.txt"
+        self.public_key_file = "public_key.txt"
+        self.private_key_file = "private_key.txt"
         self.meta_file = "key_metadata.json"
-
+        self.rsa=None
     def generate_and_save_keypair(self):
         print("Generating RSA keypair...")
         rsa = RSA(key_size=self.key_size)
         rsa.generate_keypair()
+        self.rsa=rsa
 
-        # Save keys
-        save_key_to_file(rsa.public_key, self.public_key_file)
-        save_key_to_file(rsa.private_key, self.private_key_file)
-
-        # Save metadata
-        metadata = {
-            "creation_time": datetime.utcnow().isoformat(),
-            "expiration_time": (datetime.utcnow() + timedelta(days=self.expiration_days)).isoformat(),
-            "key_size": self.key_size
-        }
-        with open(self.meta_file, 'w') as f:
-            json.dump(metadata, f, indent=4)
 
         print(f"Keys saved to {self.public_key_file} and {self.private_key_file}")
         print(f"Metadata saved to {self.meta_file}")
@@ -50,19 +40,22 @@ class RSAKeyManager:
         return public_key, private_key
 
     def is_key_expired(self):
-        if not os.path.exists(self.meta_file):
+        rsa_app_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'app', 'keys')
+        meta_file_path = os.path.join(rsa_app_dir, self.meta_file)
+
+        if not os.path.exists(meta_file_path):
             print("Metadata file not found. Cannot check expiration.")
             return True
 
-        with open(self.meta_file, 'r') as f:
+        with open(meta_file_path, 'r') as f:
             metadata = json.load(f)
         expiration_time = datetime.fromisoformat(metadata["expiration_time"])
+        
         if datetime.utcnow() > expiration_time:
             print("Key has expired.")
             return True
-        else:
-            print("Key is still valid.")
-            return False
+        print("Key is still valid.")
+        return False
 
     def rotate_keys(self):
         """

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discover Keys</title>
+</head>
+
+<body>
+    <h2>Discover Already Generated Keys</h2>
+
+    {% if public_key %}
+    <h3>Public Key:</h3>
+    <p>{{ public_key }}</p>
+    {% else %}
+    <p>No public key found.</p>
+    {% endif %}
+
+    {% if private_key %}
+    <h3>Private Key:</h3>
+    <p>{{ private_key }}</p>
+    {% else %}
+    <p>No private key found.</p>
+    {% endif %}
+
+    <h3>Keys Files:</h3>
+    <ul>
+        {% for key_file in keys_files %}
+        <li>{{ key_file }}</li>
+        {% endfor %}
+    </ul>
+
+</body>
+
+</html>

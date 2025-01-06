@@ -1,0 +1,246 @@
+<style>
+    body {
+        font-family: 'Inter', -apple-system, sans-serif;
+        margin: 0;
+        padding: 40px;
+        background: #f8f9fa;
+        color: #2d3748;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 24px;
+        margin-bottom: 40px;
+    }
+
+    .card {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+    }
+
+    button {
+        background: #4f46e5;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    button:hover:not(:disabled) {
+        background: #4338ca;
+    }
+
+    button:disabled {
+        background: #94a3b8;
+        cursor: not-allowed;
+    }
+
+    textarea {
+        width: 100%;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 12px;
+        margin: 8px 0;
+        font-family: inherit;
+        resize: vertical;
+        transition: border-color 0.2s;
+    }
+
+    textarea:focus {
+        border-color: #4f46e5;
+        outline: none;
+    }
+
+    .read-only {
+        background: #f1f5f9;
+        padding: 12px;
+        border-radius: 8px;
+        font-family: 'Fira Code', monospace;
+        font-size: 0.9em;
+        overflow-wrap: break-word;
+    }
+
+    .key-display {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .error {
+        background: #fee2e2;
+        border-left: 4px solid #ef4444;
+        color: #991b1b;
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin: 16px 0;
+    }
+
+    .disabled-message {
+        background: #fef3c7;
+        color: #92400e;
+        padding: 12px 16px;
+        border-radius: 8px;
+        display: none;
+    }
+
+    .disabled-message.show {
+        display: block;
+    }
+
+    .file-input {
+        margin: 16px 0;
+    }
+
+    input[type="file"] {
+        background: white;
+        padding: 8px;
+        border-radius: 8px;
+        border: 2px solid #e2e8f0;
+    }
+
+    .key-status {
+        margin-top: 16px;
+        padding: 12px;
+        border-radius: 8px;
+        background: #f1f5f9;
+    }
+
+    .key-status.error {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    @media (max-width: 768px) {
+        .grid {
+            grid-template-columns: 1fr;
+        }
+
+        body {
+            padding: 20px;
+        }
+    }
+</style>
+
+<!-- Updated Layout Structure -->
+<div class="container">
+    <div class="header">
+        <h1>RSA Encryption and Decryption</h1>
+
+        <h3>Generate Keys</h3>
+        <form action="/generate_keys" method="post">
+            <button type="submit">Generate Keys</button>
+        </form>
+    </div>
+
+    <div class="key-display">
+        <h3>Generated Keys:</h3>
+        <label for="public-key">Public Key:</label>
+        <div id="public-key" class="read-only">
+            {% if public_key %}{{ public_key }}{% else %}No public key generated yet.{% endif %}
+        </div>
+        <label for="private-key">Private Key:</label>
+        <div id="private-key" class="read-only">
+            {% if private_key %}{{ private_key }}{% else %}No private key generated yet.{% endif %}
+        </div>
+        {% if public_key and expiration_info %}
+        <div class="key-status {% if 'expired' in expiration_info %}error{% endif %}">
+            {{ expiration_info }}
+        </div>
+        {% endif %}
+    </div>
+
+    {% if error %}
+    <div class="error">
+        <h4>Error:</h4>
+        <div>{{ error }}</div>
+    </div>
+    {% endif %}
+
+    <div class="grid">
+        <div class="card">
+            <h3>Encrypt a Message</h3>
+            <div class="disabled-message {% if not public_key %}show{% endif %}">
+                Please generate keys first to enable encryption.
+            </div>
+            <form action="/encrypt" method="post">
+                <textarea name="message" placeholder="Enter text to encrypt..." {% if not public_key %}disabled{% endif
+                    %}></textarea>
+                <button type="submit" {% if not public_key %}disabled{% endif %}>Encrypt</button>
+            </form>
+            <div class="output">
+                <h4>Encrypted Message:</h4>
+                <div class="read-only">
+                    {% if encrypted_message %}{{ encrypted_message }}{% else %}No message encrypted yet.{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Decrypt a Message</h3>
+            <div class="disabled-message {% if not private_key %}show{% endif %}">
+                Please generate keys first to enable decryption.
+            </div>
+            <form action="/decrypt" method="post">
+                <textarea name="message" placeholder="Enter encrypted text to decrypt..." {% if not private_key
+                    %}disabled{% endif %}></textarea>
+                <button type="submit" {% if not private_key %}disabled{% endif %}>Decrypt</button>
+            </form>
+            <div class="output">
+                <h4>Decrypted Message:</h4>
+                <div class="read-only">
+                    {% if decrypted_message %}{{ decrypted_message }}{% else %}No message decrypted yet.{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Encrypt a File</h3>
+            <div class="disabled-message {% if not public_key %}show{% endif %}">
+                Please generate keys first to enable encryption.
+            </div>
+            <form action="/encrypt_file" method="post" enctype="multipart/form-data">
+                <div class="file-input">
+                    <input type="file" name="file" accept=".txt,.pdf,.jpg,.jpeg,.png" {% if not public_key %}disabled{%
+                        endif %}>
+                </div>
+                <button type="submit" {% if not public_key %}disabled{% endif %}>Extract & Encrypt Text</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3>Decrypt a File</h3>
+            <div class="disabled-message {% if not private_key %}show{% endif %}">
+                Please generate keys first to enable decryption.
+            </div>
+            <form action="/decrypt_file" method="post" enctype="multipart/form-data">
+                <div class="file-input">
+                    <input type="file" name="file" accept=".txt" {% if not private_key %}disabled{% endif %}>
+                </div>
+                <button type="submit" {% if not private_key %}disabled{% endif %}>Decrypt Text</button>
+            </form>
+        </div>
+    </div>
+</div>
